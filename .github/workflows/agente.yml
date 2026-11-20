@@ -1,0 +1,66 @@
+# Agente evaluador: corre cada 10 minutos (evalúa entregas y envía correos).
+# Secretos (Settings → Secrets and variables → Actions → Secrets):
+#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, GEMINI_API_KEY, GROQ_API_KEY (opcional),
+#   GMAIL_USER, GMAIL_APP_PASSWORD
+# Variables (pestaña Variables, todas opcionales):
+#   APP_URL, MAIL_FROM_NAME, MAIL_REPLY_TO, GEMINI_MODELS, LLM_PROVIDERS, TIMEZONE, EMAIL_DAILY_BUDGET, DRY_RUN
+name: agente
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # ejecución periódica del agente
+    - cron: "17 6 * * 1"     # lunes: además mantiene vivo el cron (GitHub lo apaga tras 60 días sin actividad)
+  workflow_dispatch: {}
+
+concurrency:
+  group: agente
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  agente:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar dependencias
+        working-directory: agent
+        run: npm install --omit=dev --no-audit --no-fund
+
+      - name: Ejecutar agente
+        working-directory: agent
+        run: node src/index.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          APP_URL: ${{ vars.APP_URL || '' }}
+          MAIL_FROM_NAME: ${{ vars.MAIL_FROM_NAME || 'Plataforma Docente IA' }}
+          MAIL_REPLY_TO: ${{ vars.MAIL_REPLY_TO || '' }}
+          GEMINI_MODELS: ${{ vars.GEMINI_MODELS || '' }}
+          LLM_PROVIDERS: ${{ vars.LLM_PROVIDERS || 'gemini,groq' }}
+          TIMEZONE: ${{ vars.TIMEZONE || 'America/Bogota' }}
+          EMAIL_DAILY_BUDGET: ${{ vars.EMAIL_DAILY_BUDGET || '450' }}
+          DRY_RUN: ${{ vars.DRY_RUN || 'false' }}
+          RUN_BUDGET_MS: "480000"
+
+  keepalive:
+    if: github.event.schedule == '17 6 * * 1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Reactivar el workflow (evita la desactivación por inactividad)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/agente.yml/enable"

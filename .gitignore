@@ -1,0 +1,6 @@
+node_modules/
+.env
+.env.*
+*.log
+web/test/e2e/screens/
+.DS_Store
