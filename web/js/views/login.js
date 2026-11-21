@@ -7,6 +7,7 @@ export function loginView(app, { error, onLogin }) {
   render(app, html`
     <section class="login">
       <div class="login-hero">
+        <p class="brand login-brand"><span class="brand-mark" aria-hidden="true">GB</span><span>${globalThis.APP_CONFIG?.appName || 'Plataforma Educativa GB'}</span></p>
         <p class="badge badge-primary">${icon('sparkle')} Evaluación asistida por IA</p>
         <h1>Tu aula, con un <span class="hl">evaluador que no duerme</span>.</h1>
         <p class="lead">Crea asignaturas por semestre, organiza quizzes, parciales y proyectos en 3 cortes, y deja que el agente revise cada entrega con retroalimentación objetiva.</p>
@@ -21,6 +22,7 @@ export function loginView(app, { error, onLogin }) {
         <p class="muted">Usa tu cuenta de Google. Las notificaciones llegarán a ese correo.</p>
         ${error ? html`<div class="callout danger" role="alert">${icon('alert')}<p>${error}</p></div><br>` : ''}
         <button class="btn btn-google" type="button" id="google-btn">${raw(GOOGLE)} Continuar con Google</button>
+        <p class="demo-link"><a class="btn btn-secondary" href="demo.html">Ver la demostración sin iniciar sesión</a></p>
         <p class="legal-links"><a href="privacidad.html">Política de privacidad</a> · <a href="terminos.html">Condiciones del servicio</a></p>
         <p class="small muted login-note">¿Eres estudiante? Entra y escribe el código que te dio tu docente. ¿Eres docente? Tu correo debe estar autorizado por el administrador de la plataforma.</p>
       </div>

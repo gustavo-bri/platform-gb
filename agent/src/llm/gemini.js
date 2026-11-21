@@ -101,7 +101,7 @@ export function createGemini({
           continue;
         }
         // Saturación (503), cuota (429) o sin respuesta: cambiar de modelo de inmediato, sin esperar.
-        const switchModel = err instanceof LlmError && (err.status === 503 || err.status === 429 || err.status === undefined);
+        const switchModel = err instanceof LlmError && (err.status === 503 || err.status === 429 || err.status == null);
         if (err instanceof LlmError && err.retryable && !switchModel && retries < maxRetries) {
           const wait = backoffMs(retries, err.retryAfterMs, random);
           assertTime({ ...opts, now }, wait + 5_000, `reintentar ${model}`); // no esperar si no cabe

@@ -69,6 +69,8 @@ export function toLocalInput(d) {
 }
 export const fromLocalInput = (v) => (v ? new Date(v).toISOString() : null);
 export const fileSize = (b) => (b == null ? '' : b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`);
+/** Primer nombre para saludos, omitiendo títulos como «Prof.» o «Dra.». */
+export const firstName = (name = '') => (name.split(/\s+/).find((w) => w && !/\.$/.test(w) && !/^(prof|profe|dr|dra|ing|lic|mg|msc|phd)$/i.test(w)) || name.split(/\s+/)[0] || '');
 export const initials = (name = '') => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || '?';
 export function currentSemester(d = new Date()) { return `${d.getFullYear()}-${d.getMonth() < 6 ? 1 : 2}`; }
 export const gradeClass = (g, pass) => (g == null ? '' : Number(g) >= Number(pass) ? 'ok' : 'low');

@@ -62,7 +62,7 @@ export function loadConfig(env = process.env) {
     gmailUser,
     gmailPass,
     mailEnabled: Boolean(gmailUser && gmailPass),
-    mailFromName: str(env, 'MAIL_FROM_NAME', 'Plataforma Docente IA'),
+    mailFromName: str(env, 'MAIL_FROM_NAME', 'Plataforma Educativa GB'),
     // A dónde llegan las respuestas de los estudiantes (por defecto, la misma cuenta que envía).
     mailReplyTo: str(env, 'MAIL_REPLY_TO', '') || gmailUser,
     appUrl: str(env, 'APP_URL', '').replace(/#.*$/, ''),

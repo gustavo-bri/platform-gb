@@ -2,7 +2,7 @@
 import * as api from '../api.js';
 import {
   html, render, icon, $, toast, withBusy, fmtDateTime, fmtGrade, fmtPct, relTime, fileSize, emptyState, skeleton,
-  statusBadge, gradeClass,
+  statusBadge, gradeClass, firstName,
 } from '../ui.js';
 import { computeGradebook, effectiveWeights, COMPONENTS, COMPONENT_LABEL } from '../grading.js';
 import { feedbackView } from './feedback.js';
@@ -58,7 +58,7 @@ export async function home(ctx) {
   const todo = upcoming.filter((u) => !u.sub);
   render(app, html`
     <div class="page-head">
-      <div><h1>Hola, ${ctx.profile.full_name.split(' ')[0]}</h1>
+      <div><h1>Hola, ${firstName(ctx.profile.full_name)}</h1>
         <p>${todo.length ? html`Tienes <strong>${todo.length}</strong> entrega(s) pendiente(s).` : subjects.length ? 'No tienes entregas pendientes.' : 'Únete a tu primera asignatura con el código de tu docente.'}</p></div>
     </div>
     <div class="two-col">

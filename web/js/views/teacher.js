@@ -3,7 +3,7 @@ import * as api from '../api.js';
 import {
   html, raw, render, icon, $, $$, toast, openModal, confirmDialog, withBusy, formData, copyText, downloadBlob,
   fmtDateTime, fmtDate, fmtGrade, fmtPct, relTime, toLocalInput, fromLocalInput, fileSize, emptyState, skeleton,
-  statusBadge, gradeClass, currentSemester, initials,
+  statusBadge, gradeClass, currentSemester, initials, firstName,
 } from '../ui.js';
 import { computeGradebook, effectiveWeights, validateWeights, COMPONENTS, COMPONENT_LABEL, round } from '../grading.js';
 import { corteWorkbook, corteCsv, fullHistoryWorkbook } from '../reports.js';
@@ -36,7 +36,7 @@ export async function home(ctx) {
     const toReview = subjects.reduce((n, s) => n + s.toReview, 0);
     render(app, html`
       <div class="page-head">
-        <div><h1>Mis asignaturas</h1><p>Hola, ${ctx.profile.full_name.split(' ')[0]}. ${toReview ? html`Tienes <strong>${toReview}</strong> entrega(s) esperando tu revisión.` : 'Todo al día.'}</p></div>
+        <div><h1>Mis asignaturas</h1><p>Hola, ${firstName(ctx.profile.full_name)}. ${toReview ? html`Tienes <strong>${toReview}</strong> entrega(s) esperando tu revisión.` : 'Todo al día.'}</p></div>
         <div class="row">
           ${semesters.length > 1 ? html`<label class="sr-only" for="sem">Semestre</label>
             <select id="sem" style="width:auto">${[html`<option value="todos">Todos los semestres</option>`, ...semesters.map((s) => html`<option value="${s}" ${filter === s ? 'selected' : ''}>${s}</option>`)]}</select>` : ''}

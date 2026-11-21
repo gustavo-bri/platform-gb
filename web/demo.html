@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Demostración — Plataforma Educativa GB</title>
+  <meta name="description" content="Plataforma para docentes: asignaturas por semestre, actividades por corte, evaluación automática con IA, recordatorios por correo y reportes de notas.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1220" media="(prefers-color-scheme: dark)">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>
+    // Aplica el tema guardado antes de pintar (evita parpadeo).
+    try { const t = localStorage.getItem('aula.theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+  <script src="config.js"></script>
+  <script>
+    // MODO DEMOSTRACIÓN: datos ficticios en este navegador; nunca se conecta a la base de datos real.
+    window.__MOCK_SEED__ = 'demo';
+    window.__DEMO__ = true;
+  </script>
+  <script src="js/demo/demo-data.js"></script>
+  <script>
+    try { if (!sessionStorage.getItem('mockuser')) sessionStorage.setItem('mockuser', window.__DEMO_IDS__.teacher); } catch (e) {}
+  </script>
+  <script src="js/demo/mock-backend.js"></script>
+  <script type="module" src="js/main.js"></script>
+  <script src="js/demo/demo-ui.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#app">Saltar al contenido</a>
+  <div class="demo-banner" role="region" aria-label="Modo demostración">
+    <p><strong>Modo demostración</strong> · Datos de ejemplo guardados solo en este navegador. La evaluación de la IA es simulada.</p>
+    <div class="demo-actions">
+      <div class="seg" role="group" aria-label="Ver la plataforma como">
+        <button type="button" data-role="teacher">Ver como docente</button>
+        <button type="button" data-role="student">Ver como estudiante</button>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-reset>Reiniciar datos</button>
+      <a class="btn btn-ghost btn-sm" href="./">Ir a la plataforma real</a>
+    </div>
+  </div>
+  <header class="topbar" id="topbar" hidden></header>
+  <main id="app" tabindex="-1">
+    <div class="boot" aria-busy="true"><div class="spinner" aria-hidden="true"></div><p>Cargando…</p></div>
+  </main>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <noscript><p class="noscript">Esta plataforma necesita JavaScript activado.</p></noscript>
+</body>
+</html>

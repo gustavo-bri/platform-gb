@@ -67,9 +67,11 @@ test('gemini: modelo saturado (503) o sin respuesta → cambia de modelo sin esp
 });
 
 test('gemini: modelo que no responde (timeout) → pasa al siguiente modelo', async () => {
+  let lentoCalls = 0;
   const f = async (url, init) => {
     if (url.includes('/models?')) return modelsList(['lento', 'rapido']);
     if (url.includes('lento:')) {
+      lentoCalls++;
       await new Promise((_, rej) => init.signal.addEventListener('abort', () => rej(new Error('The operation was aborted due to timeout'))));
     }
     return geminiOk({ ok: 1 });
@@ -78,6 +80,7 @@ test('gemini: modelo que no responde (timeout) → pasa al siguiente modelo', as
   const keepAlive = setTimeout(() => {}, 5_000); // en producción la conexión de red mantiene vivo el proceso
   try {
     assert.equal((await g.generate(prompt, { deadline: Date.now() + 60_000 })).model, 'rapido');
+    assert.equal(lentoCalls, 1, 'un modelo que no responde no se reintenta: se cambia de modelo');
   } finally { clearTimeout(keepAlive); }
 });
 

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Aula IA — sistema visual
+   Plataforma Educativa GB — sistema visual
    Mobile-first, tema claro/oscuro, contraste AA, foco visible, movimiento reducido.
    ========================================================================== */
 :root {
@@ -93,7 +93,7 @@ code, pre, kbd { font-family: var(--mono); font-size: .92em; }
   border-bottom: 1px solid var(--border);
 }
 .brand { display: inline-flex; align-items: center; gap: var(--space-2); font-weight: 750; font-size: 1.1rem; color: var(--text); text-decoration: none; }
-.brand-mark { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), #0d9488); display: grid; place-items: center; color: #fff; font-weight: 800; font-size: .95rem; }
+.brand-mark { width: 34px; height: 34px; letter-spacing: -.02em; border-radius: 9px; background: linear-gradient(135deg, var(--primary), #0d9488); display: grid; place-items: center; color: #fff; font-weight: 800; font-size: .82rem; }
 .topbar .spacer { flex: 1; }
 .user-chip { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; padding: 4px 10px 4px 4px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font: inherit; }
 .user-chip:hover { border-color: var(--border-strong); }
@@ -329,3 +329,16 @@ dialog.modal[open] { animation: pop .22s var(--ease); }
 .legal h2 { margin-top: var(--space-6); }
 .legal ul { padding-left: 1.3em; display: grid; gap: 6px; }
 .legal-links { margin-top: var(--space-4); font-size: .875rem; }
+.login-brand { font-size: 1.25rem; margin-bottom: var(--space-4); }
+
+/* ── Modo demostración ─────────────────────────────────────────── */
+.demo-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) max(var(--space-4), env(safe-area-inset-left)); background: var(--warn-soft); color: var(--text);
+  border-bottom: 1px solid color-mix(in srgb, var(--warn) 35%, transparent); font-size: .9rem; }
+.demo-banner p { margin: 0; }
+.demo-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.demo-banner .seg { background: var(--surface); }
+.demo-banner .seg button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.demo-link { margin-top: var(--space-3); }
+.topbar[hidden] { display: none; }
+.login-brand { display: flex; }

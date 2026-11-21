@@ -7,7 +7,7 @@ import * as student from './views/student.js';
 
 const app = document.getElementById('app');
 const topbar = document.getElementById('topbar');
-const APP_NAME = globalThis.APP_CONFIG?.appName || 'Aula IA';
+const APP_NAME = globalThis.APP_CONFIG?.appName || 'Plataforma Educativa GB';
 let profile = null;
 let cleanup = null;
 let routeSeq = 0;
@@ -62,7 +62,7 @@ function renderTopbar() {
   const dark = currentTheme() === 'dark';
   topbar.hidden = false;
   render(topbar, html`
-    <a class="brand" href="#/" aria-label="${APP_NAME}: inicio"><span class="brand-mark" aria-hidden="true">A</span><span>${APP_NAME}</span></a>
+    <a class="brand" href="#/" aria-label="${APP_NAME}: inicio"><span class="brand-mark" aria-hidden="true">GB</span><span>${APP_NAME}</span></a>
     <span class="spacer"></span>
     <button class="btn-icon" type="button" id="theme-btn" aria-label="${dark ? 'Usar tema claro' : 'Usar tema oscuro'}">${icon(dark ? 'sun' : 'moon')}</button>
     <button class="user-chip" type="button" id="user-btn" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu">
@@ -87,7 +87,10 @@ function renderTopbar() {
     try { localStorage.setItem('aula.theme', next); } catch { /* sin almacenamiento */ }
     renderTopbar();
   });
-  $('#logout-btn').addEventListener('click', async () => { await sb.auth.signOut(); location.hash = '#/'; location.reload(); });
+  $('#logout-btn').addEventListener('click', async () => {
+    if (globalThis.__DEMO__) { location.href = './'; return; } // en la demo, salir lleva a la plataforma real
+    await sb.auth.signOut(); location.hash = '#/'; location.reload();
+  });
   $('#notif-toggle').addEventListener('change', async (e) => {
     try {
       await updateProfile({ email_notifications: e.target.checked });
