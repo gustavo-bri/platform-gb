@@ -6,6 +6,6 @@
 // NUNCA pongas aquí la clave secreta (sb_secret_… / service_role).
 window.APP_CONFIG = {
   appName: 'Aula IA',
-  supabaseUrl: 'https://bcvhtitlntslmjduervw.supabase.co/rest/v1/',
+  supabaseUrl: 'https://bcvhtitlntslmjduervw.supabase.co',
   supabaseAnonKey: 'sb_publishable_Zrwir31-rVL8_8AJUYjUxQ_K7irVG6Q',
 };
