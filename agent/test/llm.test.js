@@ -37,23 +37,65 @@ test('gemini: partes inline se envían como inline_data', async () => {
   assert.deepEqual(f.calls[1].body.contents[0].parts[1], { inline_data: { mime_type: 'application/pdf', data: 'QUJD' } });
 });
 
-test('gemini: 429 → reintento respetando retryDelay, luego éxito', async () => {
+test('gemini: 500 genérico → un reintento respetando retryDelay, luego éxito', async () => {
   const waits = [];
   let n = 0;
   const f = mockFetch((url) => {
     if (url.includes('/models?')) return modelsList(['m1']);
     n++;
-    if (n === 1) return jsonResponse({ error: { code: 429, message: 'cuota', details: [{ '@type': 'type.googleapis.com/google.rpc.RetryInfo', retryDelay: '7s' }] } }, 429);
-    if (n === 2) return jsonResponse({ error: { message: 'sobrecargado' } }, 503);
+    if (n === 1) return jsonResponse({ error: { code: 500, message: 'interno', details: [{ '@type': 'type.googleapis.com/google.rpc.RetryInfo', retryDelay: '7s' }] } }, 500);
     return geminiOk({ ok: true });
   });
   const g = createGemini({ apiKey: 'k', models: ['m1'], fetchImpl: f, sleep: async (ms) => waits.push(ms), log: silentLog, random: () => 0 });
   const r = await g.generate(prompt);
   assert.equal(r.json.ok, true);
-  assert.deepEqual(waits, [7000, 4000]);
+  assert.deepEqual(waits, [7000]);
 });
 
-test('gemini: 429 persistente agota reintentos y pasa al siguiente modelo; 404 también', async () => {
+test('gemini: modelo saturado (503) o sin respuesta → cambia de modelo sin esperar y no insiste en la siguiente entrega', async () => {
+  const waits = [];
+  const f = mockFetch((url) => {
+    if (url.includes('/models?')) return modelsList(['m1', 'm2']);
+    if (url.includes('m1:')) return jsonResponse({ error: { message: 'This model is currently experiencing high demand.' } }, 503);
+    return geminiOk({ ok: 2 });
+  });
+  const g = createGemini({ apiKey: 'k', models: ['m1', 'm2'], fetchImpl: f, sleep: async (ms) => waits.push(ms), log: silentLog });
+  assert.equal((await g.generate(prompt)).model, 'm2');
+  assert.equal((await g.generate(prompt)).model, 'm2');
+  assert.deepEqual(waits, [], 'no espera ante saturación');
+  assert.equal(f.calls.filter((c) => c.url.includes('m1:')).length, 1, 'el modelo saturado se intenta una sola vez por ejecución');
+});
+
+test('gemini: modelo que no responde (timeout) → pasa al siguiente modelo', async () => {
+  const f = async (url, init) => {
+    if (url.includes('/models?')) return modelsList(['lento', 'rapido']);
+    if (url.includes('lento:')) {
+      await new Promise((_, rej) => init.signal.addEventListener('abort', () => rej(new Error('The operation was aborted due to timeout'))));
+    }
+    return geminiOk({ ok: 1 });
+  };
+  const g = createGemini({ apiKey: 'k', models: ['lento', 'rapido'], fetchImpl: f, sleep: noSleep, log: silentLog, timeoutMs: 50 });
+  const keepAlive = setTimeout(() => {}, 5_000); // en producción la conexión de red mantiene vivo el proceso
+  try {
+    assert.equal((await g.generate(prompt, { deadline: Date.now() + 60_000 })).model, 'rapido');
+  } finally { clearTimeout(keepAlive); }
+});
+
+test('cadena: si Gemini consume su tiempo, queda tiempo reservado para Groq (entregas de texto)', async () => {
+  const { createLlm } = await import('../src/llm/index.js');
+  const { OutOfTimeError } = await import('../src/llm/common.js');
+  let geminiDeadline;
+  const llm = createLlm({ config: {}, log: silentLog, providers: [
+    { name: 'gemini', generate: async (_p, o) => { geminiDeadline = o.deadline; throw new OutOfTimeError(); } },
+    { name: 'groq', generate: async () => ({ json: { ok: 1 }, model: 'groq-m' }) },
+  ] });
+  const deadline = Date.now() + 240_000;
+  const r = await llm.generate(prompt, { deadline });
+  assert.equal(r.model, 'groq-m');
+  assert.ok(deadline - geminiDeadline >= 75_000, 'Gemini recibió un límite que deja ≥75 s para Groq');
+});
+
+test('gemini: 429 cambia de modelo de inmediato; 404 también', async () => {
   const f = mockFetch((url) => {
     if (url.includes('/models?')) return jsonResponse({ error: { message: 'x' } }, 500); // listado falla → lista tal cual
     if (url.includes('m1:')) return jsonResponse({ error: { message: 'cuota' } }, 429);
@@ -63,7 +105,7 @@ test('gemini: 429 persistente agota reintentos y pasa al siguiente modelo; 404 t
   const g = createGemini({ apiKey: 'k', models: ['m1', 'm2', 'm3'], fetchImpl: f, sleep: noSleep, log: silentLog });
   const r = await g.generate(prompt);
   assert.equal(r.model, 'm3');
-  assert.equal(f.calls.filter((c) => c.url.includes('m1:')).length, 4, '1 intento + 3 reintentos');
+  assert.equal(f.calls.filter((c) => c.url.includes('m1:')).length, 1, 'cuota agotada (429): cambia de modelo sin reintentar');
   assert.equal(f.calls.filter((c) => c.url.includes('m2:')).length, 1, '404 no se reintenta');
 });
 

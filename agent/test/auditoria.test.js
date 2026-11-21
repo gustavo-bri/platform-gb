@@ -58,7 +58,7 @@ test('gemini no espera un reintento que no cabe antes del deadline', async () =>
   const slept = [];
   const f = mockFetch((url) => (url.includes('/models?')
     ? jsonResponse({ models: [{ name: 'models/m1', supportedGenerationMethods: ['generateContent'] }, { name: 'models/m2', supportedGenerationMethods: ['generateContent'] }] })
-    : jsonResponse({ error: { message: 'cuota', details: [{ retryDelay: '30s' }] } }, 429)));
+    : jsonResponse({ error: { message: 'error interno', details: [{ retryDelay: '30s' }] } }, 500)));
   const g = createGemini({ apiKey: 'k', models: ['m1', 'm2'], fetchImpl: f, sleep: async (ms) => slept.push(ms), log: silentLog });
   await assert.rejects(g.generate({ system: 's', parts: [{ type: 'text', text: 't' }] }, { deadline: Date.now() + 10_000 }), OutOfTimeError);
   assert.deepEqual(slept, [], 'no duerme 30 s si solo quedan 10 s');

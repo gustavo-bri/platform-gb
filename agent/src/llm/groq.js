@@ -8,7 +8,7 @@ const URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export function createGroq({
   apiKey, model, fetchImpl = globalThis.fetch, sleep = defaultSleep, log = () => {},
-  maxRetries = 3, timeoutMs = 120_000, random = Math.random, now = Date.now,
+  maxRetries = 2, timeoutMs = 60_000, random = Math.random, now = Date.now,
 }) {
   async function callOnce(prompt, opts) {
     assertTime({ ...opts, now }, 5_000, 'llamar a groq');

@@ -10,9 +10,11 @@ const NON_TEXT_MODELS = /(image|tts|live|audio|embedding|veo|imagen|lyria|aqa|co
 
 export function createGemini({
   apiKey, models, fetchImpl = globalThis.fetch, sleep = defaultSleep, log = () => {},
-  maxRetries = 3, timeoutMs = 120_000, random = Math.random, now = Date.now,
+  maxRetries = 1, timeoutMs = 60_000, random = Math.random, now = Date.now,
 }) {
   let resolvedModels = null; // caché por ejecución
+  // Modelos saturados o sin respuesta en esta ejecución: no se insiste con ellos en las siguientes entregas.
+  const unhealthy = new Map();
 
   async function discoverModels(opts = {}) {
     if (resolvedModels) return resolvedModels;
@@ -98,7 +100,9 @@ export function createGemini({
           useSchema = false;
           continue;
         }
-        if (err instanceof LlmError && err.retryable && retries < maxRetries) {
+        // Saturación (503), cuota (429) o sin respuesta: cambiar de modelo de inmediato, sin esperar.
+        const switchModel = err instanceof LlmError && (err.status === 503 || err.status === 429 || err.status === undefined);
+        if (err instanceof LlmError && err.retryable && !switchModel && retries < maxRetries) {
           const wait = backoffMs(retries, err.retryAfterMs, random);
           assertTime({ ...opts, now }, wait + 5_000, `reintentar ${model}`); // no esperar si no cabe
           log('warn', `${model}: ${err.message}; reintento ${retries + 1}/${maxRetries} en ${Math.round(wait / 1000)} s.`);
@@ -117,8 +121,9 @@ export function createGemini({
   }
 
   async function generate(prompt, opts = {}) {
-    const list = await discoverModels(opts);
-    const causes = [];
+    const all = await discoverModels(opts);
+    const list = all.filter((m) => !unhealthy.has(m));
+    const causes = [...all.filter((m) => unhealthy.has(m)).map((m) => `${m}: omitido (${unhealthy.get(m)})`)];
     for (const model of list) {
       try {
         const json = await tryModel(model, prompt, opts);
@@ -127,6 +132,7 @@ export function createGemini({
         if (err instanceof OutOfTimeError) throw err;
         causes.push(`${model}: ${err.message}`);
         if (err instanceof LlmError && err.fatal) break; // clave inválida o sin permiso
+        if (err instanceof LlmError && err.retryable) unhealthy.set(model, err.status ? `HTTP ${err.status}` : 'sin respuesta');
         log('warn', `Gemini ${model} falló (${err.message}); se prueba el siguiente modelo.`);
       }
     }
